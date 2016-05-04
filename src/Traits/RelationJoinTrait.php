@@ -28,70 +28,70 @@ trait RelationJoinTrait
      * Based on http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      *
      * @param \Illuminate\Database\Query\Builder $query
-     * @param string    $relation_name          the function that return the relation
-     * @param string    $operatorOrCollumns     ON condition operator
-     * @param string    $type                   join type (left, right, '', etc)
-     * @param bool      $where                  custom where condition
-     * @param array     $collumns               if you will not pass collumns, it will retreive the collumn listing.
+     * @param string                             $relation_name     the function that return the relation
+     * @param string                             $operatorOrColumns ON condition operator
+     * @param string                             $type              join type (left, right, '', etc)
+     * @param bool                               $where             custom where condition
+     * @param array                              $columns           if you will not pass columns, it will retreive the column listing.
      * If you pass null
      * it will not get any data from the model.
-     * all collumns *
+     * all columns *
      *
      * @return \Illuminate\Database\Query\Builder
      *
      * @link http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      */
-    public function scopeModelJoin($query, $relation_name, $operatorOrCollumns = '=', $type = 'left',
-                                   $where = false, $collumns = array()) {
+    public function scopeModelJoin($query, $relation_name, $operatorOrColumns = '=', $type = 'left',
+                                   $where = false, $columns = array()) {
 
         $relation = $this->$relation_name();
         $table = $relation->getRelated()->getTable();
         $one = $relation->getRelated()->getQualifiedKeyName();
         $two = $relation->getForeignKey();
 
-        return $this->scopeJoinWithSelect($query, $table, $one, $operatorOrCollumns, $two, $type, $where, $collumns);
+        return $this->scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type, $where, $columns);
     }
 
     /**
      * @param \Illuminate\Database\Query\Builder $query
-     * @param string $table         join the table
-     * @param string $one           joins first parameter
-     * @param string|array|null $operatorOrCollumns    operator condition or collums list
-     * @param string $two           joins two parameter
-     * @param string $type          join type (left, right, '', etc)
-     * @param bool|false $where     custom where condition
-     * @param array $collumns       if you will not pass collumns, it will retreive the collumn listing. If you pass null
+     * @param string                             $table             join the table
+     * @param string                             $one               joins first parameter
+     * @param string|array|null                  $operatorOrColumns operator condition or colums list
+     * @param string                             $two               joins two parameter
+     * @param string                             $type              join type (left, right, '', etc)
+     * @param bool|false                         $where             custom where condition
+     * @param array                              $columns           if you will not pass columns, it will retreive the column listing. If you pass null
      * it will not get any data from the model.
      *
      * @return \Illuminate\Database\Query\Builder
      */
-    public function scopeJoinWithSelect($query, $table, $one, $operatorOrCollumns, $two, $type = "left", $where = false,
-                                        $collumns = array())
+    public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = "left", $where = false,
+                                        $columns = array())
     {
-        // if the operator collumns are in
-        if (is_array($operatorOrCollumns) || is_null($operatorOrCollumns)) {
-            $collumns = $operatorOrCollumns;
-            $operatorOrCollumns = "=";
+        // if the operator columns are in
+        if (is_array($operatorOrColumns) || is_null($operatorOrColumns)) {
+            $columns = $operatorOrColumns;
+            $operatorOrColumns = "=";
         }
 
-        if (!is_null($collumns)) {
-            // if there is no specific collumns, lets get all
-            if (empty($collumns)) {
-                $collumns = \Schema::getColumnListing($table);
+        if (!is_null($columns)) {
+            // if there is no specific columns, lets get all
+            if (empty($columns)) {
+                $columns = \Schema::getColumnListing($table);
             }
 
             // build the table values prefixed by the table to ensure unique values
-            foreach ($collumns as $related_column) {
+            foreach ($columns as $related_column) {
                 $query->addSelect(new Expression("`$table`.`$related_column` AS `$table.$related_column`"));
             }
         }
 
-        return $query->join($table, $one, $operatorOrCollumns, $two, $type, $where);
+        return $query->join($table, $one, $operatorOrColumns, $two, $type, $where);
     }
 
     /**
      * Overides the basic attributes filling with check if the attributes has
-     * collumns with table format. Checks if we can make a model based on table prefix and
+     * columns with table format. Checks if we can make a model based on table prefix and
      * relation definition. Tested on BelonstTo and left join
      *
      * @param array $attributes

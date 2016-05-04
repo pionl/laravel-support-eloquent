@@ -4,15 +4,16 @@ namespace Pion\Support\Eloquent\Traits;
 /**
  * Class NullEmptyStringAttributeTrait
  *
- * Enables the automatic nulling of empty string value. You can provide
- * list of collumns keys to allow only specified collumns to be nulled.
+ * Enables the automatic nulling of empty string value (like from post or set). You can provide
+ * list of columns keys to allow only specified columns (use `$nullEmptyColumns`) to be nulled or you can provide a
+ * list of columns keys to ignore while trying to null the value (use `$nullIgnoreColumns`).
  *
  * Usage for setting nullEmptyCollumns:
  *
  * public function __construct(array $attributes = []) {
  *      parent::__construct($attributes);
  *
- *       $this->nullEmptyCollumns = [
+ *       $this->nullEmptyColumns = [
  *          "name"
  *       ];
  * }
@@ -21,10 +22,10 @@ trait NullEmptyStringAttributeTrait
 {
 
     /**
-     * Enables settings specified collumns
+     * Enables settings specified columns
      * @var array|null
      */
-    protected $nullEmptyCollumns = null;
+    protected $nullEmptyColumns = null;
 
     /**
      * Enables to set specified columns that should be ignored in seting null
@@ -64,7 +65,7 @@ trait NullEmptyStringAttributeTrait
     public function canNullAttributeValue($key, $value)
     {
         // filter collumns (optional setting)
-        if (is_array($this->nullEmptyCollumns) && !in_array($key, $this->nullEmptyCollumns)) {
+        if (is_array($this->nullEmptyColumns) && !in_array($key, $this->nullEmptyColumns)) {
             return false;
         }
 
