@@ -1,0 +1,20 @@
+{
+    "name": "pion/laravel-support-eloquent",
+    "description": "Package with small support traits and classes for the Laravel Eloquent models",
+
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Martin Kluska",
+            "email": "martin.kluska@imakers.cz"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Pion\\Support\\Eloquent\\": "src/"
+        }
+    },
+    "require": {
+        "illuminate/database": "5.*"
+    }
+}
