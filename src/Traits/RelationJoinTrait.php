@@ -1,6 +1,7 @@
 <?php
 namespace Pion\Support\Eloquent\Traits;
 
+use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Str;
@@ -50,7 +51,14 @@ trait RelationJoinTrait
         /** @var Relation $relation */
         $relation = $this->$relation_name();
         $table = $relation->getRelated()->getTable();
-        $one = $relation->getQualifiedParentKeyName();
+
+        // use different relation column for HasOneOrMany relation
+        if ($relation instanceof HasOneOrMany) {
+            $one = $relation->getQualifiedParentKeyName();
+        } else {
+            $one = $relation->getRelated()->getQualifiedKeyName();
+        }
+
         $two = $relation->getForeignKey();
 
         return $this->scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type, $where, $columns);
