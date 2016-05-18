@@ -1,6 +1,7 @@
 <?php
 namespace Pion\Support\Eloquent\Traits;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Str;
 
@@ -11,11 +12,13 @@ use Illuminate\Support\Str;
  *
  * Prefils the relations array.
  *
- *  @property array $relationAliases A list of relations that has different method name than the table. Can be defined
+ * @property array $relationAliases A list of relations that has different method name than the table. Can be defined
  * in model like this:
  * protected $relationAliases = [
  *   "activity_type" => "type"
  *   ];
+ *
+ * @method setRelation($table, $instance)
  *
  * @package Pion\Support\Eloquent\Traits
  */
@@ -44,9 +47,10 @@ trait RelationJoinTrait
     public function scopeModelJoin($query, $relation_name, $operatorOrColumns = '=', $type = 'left',
                                    $where = false, $columns = array()) {
 
+        /** @var Relation $relation */
         $relation = $this->$relation_name();
         $table = $relation->getRelated()->getTable();
-        $one = $relation->getRelated()->getQualifiedKeyName();
+        $one = $relation->getQualifiedParentKeyName();
         $two = $relation->getForeignKey();
 
         return $this->scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type, $where, $columns);
@@ -111,6 +115,7 @@ trait RelationJoinTrait
 
                 // check if exists
                 if (method_exists($this, $table)) {
+                    /** @var Relation $relation */
                     $relation = $this->$table();
 
                     if (is_object($relation) && method_exists($relation, "getRelated")) {
