@@ -126,15 +126,31 @@ trait RelationJoinTrait
                     /** @var Relation $relation */
                     $relation = $this->$table();
 
+                    // check if the relations support related method and we have
+                    // relation object
                     if (is_object($relation) && method_exists($relation, "getRelated")) {
+                        // when joining via left, all the values can be null
+                        // if not found, lets support null relation
+                        $isAllNull = true;
 
-                        $instance = $relation->getRelated()->newFromBuilder($newAttributes);
-
-                        $this->setRelation($table, $instance);
-
+                        // remove the attributes from the original model
                         foreach ($newAttributes as $key => $attribute) {
                             unset($attributes[$tableFull.".".$key]);
+                            if (!is_null($attribute)) {
+                                $isAllNull = false;
+                            }
                         }
+
+                        // if we have all values null, the object doesn't exists
+                        if ($isAllNull) {
+                            $instance = null;
+                        } else {
+                            // build the realation object
+                            $instance = $relation->getRelated()->newFromBuilder($newAttributes);
+                        }
+
+                        // store the relation object
+                        $this->setRelation($table, $instance);
                     }
                 }
             }
