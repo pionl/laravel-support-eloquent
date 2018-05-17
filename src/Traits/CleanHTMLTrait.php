@@ -8,8 +8,10 @@ namespace Pion\Support\Eloquent\Traits;
  * Enables attribute value cleaning from HTML for all attributes, by limiting only desired by
  * `$cleanAttributes` property or by limiting which attributes can have html `$dontCleanAttributes`.
  *
- * @property array cleanAttributes
- * @property array dontCleanAttributes
+ * @property array       cleanAttributes
+ * @property array       dontCleanAttributes
+ * @property string|null stripHtmlTags You can use the property to specify tags which should
+ * not be stripped.
  *
  * @package App\Models\Traits
  */
@@ -25,7 +27,7 @@ trait CleanHTMLTrait
     {
         // should we null the attribute
         if ($this->canRemoveHTMLFromAttribute($key, $value)) {
-            return strip_tags($value);
+            return strip_tags($value, property_exists($this, $this->stripHtmlTags) ? $this->stripHtmlTags : null);
         }
         return $value;
     }

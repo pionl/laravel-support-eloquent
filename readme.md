@@ -13,7 +13,8 @@ Set of traits that will change the attribute value.
 ### CleanHTMLFromAttributeTrait
 
 Enables automatic attribute value cleaning from HTML for all attributes, by limiting only desired by `$cleanAttributes` 
-property or by limiting which attributes can have html `$dontCleanAttributes`.
+property or by limiting which attributes can have html `$dontCleanAttributes`. You can use the `$stripHtmlTags` property to 
+specify tags which should not be stripped.
 
 For manual usage use `CleanHTMLTrait` with `tryToCleanAttributeValue($key, $value)` method.
 
