@@ -104,9 +104,11 @@ the relation. You can't provide a '*' as column.
 
 Can be defined in model like this:
 
-    protected $relationAliases = [
-        "activity_type" => "type"
-    ];
+```php
+protected $relationAliases = [
+    "activity_type" => "type"
+];
+```
 
 Then you can call it in standard way `modelJoin("type")` for a ActivityType model class.
        
@@ -116,52 +118,71 @@ The basic method support custom columns, where condition, join operator and join
 
 ##### All columns
 
-    Model::modelJoin("type")->get()
+```php
+Model::modelJoin("type")->get()
+```
     
 ##### Desired columns (recommended)
 
-    Model::modelJoin("type", ["name", "id", "color"])->get();
+```php
+Model::modelJoin("type", ["name", "id", "color"])->get();
+```
 
-Then you can get the object by standart relation way:
+Then you can get the object by standard relation way:
 
-    $model->type->color
+```php
+$model->type->color
+```
     
 But be carefull, can be null (default is LEFT connection)!
 
 ##### Desired columns with inner join
 
+```php
 Model::modelJoin("type", ["name", "id", "color"], "inner")->get();
+```
 
 ##### Method
 
 Docs is provided in code.
 
-    modelJoin($query, $relation_name, $operatorOrColumns = '=', $type = 'left', $where = false, $columns = array())
+```php
+modelJoin($query, $relation_name, $operatorOrColumns = '=', $type = 'left', $where = false, $columns = array())
+```
 
 #### Advanced example
 
 Docs is provided in code. Uses table as a relation function.
 
-    joinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = "left", $where = false, $columns = array())
-
+```php
+joinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = "left", $where = false, $columns = array())
+```
 
 ### RelationCountTrait
 Enables to count a related models. In future will prepare better docs.
 
 #### Example
 Usage of where: 
-    
-    $count = $model->relationCountWithWhere("user_permission", "user_id", $user, "App\\Models\\User");
+
+```php    
+$count = $model->relationCountWithWhere("user_permission", "user_id", $user, "App\\Models\\User");
+```
 
 Calling the function again will use the cache in relations array. After this call you can also use
 
-    $model->user_permission_{ForeignKey}_{userIdValueForWhere} which will the object of User model with count attribute.
+```php
+$model->user_permission_{ForeignKey}_{userIdValueForWhere} which will the object of User model with count attribute.
+```
 
 You can also get the where index by passing variable which will be overided by the reference:
 
-    $index = "user_permission";
-    $model->relationCountWithWhere($index, "user_id", $user, "App\\Models\\User");
+```php
+$index = "user_permission";
+$model->relationCountWithWhere($index, "user_id", $user, "App\\Models\\User");
+```
     
 Simple call will return count and the index will be stored in $model->user
 
-    $model->relationCount("user", "App\\Models\\User") 
+```php
+$model->relationCount("user", "App\\Models\\User") 
+```
