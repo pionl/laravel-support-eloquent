@@ -12,7 +12,10 @@
     "autoload": {
         "psr-4": {
             "Pion\\Support\\Eloquent\\": "src/"
-        }
+        },
+        "files": [
+            "src/Helpers/model_helper.php"
+        ]
     },
     "require": {
         "illuminate/database": "5.*"
