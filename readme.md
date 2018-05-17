@@ -1,6 +1,11 @@
 # Laravel's Eloquent support package
 Contains a set of traits for the eloquent model. In future can contain more set of classes/traits for the eloquent database.
 
+## Installation
+
+    composer require pion/laravel-support-eloquent
+
+
 ## Attribute value altering traits
 
 Set of traits that will change the attribute value.
