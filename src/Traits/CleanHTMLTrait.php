@@ -18,8 +18,11 @@ namespace Pion\Support\Eloquent\Traits;
 trait CleanHTMLTrait
 {
     /**
-     * @param $key
-     * @param $value
+     * Checks if given attribute should be striped from HTML. If no cleanAttributes or dontCleanAttributes
+     * are not defined, all values will be cleaned.
+     *
+     * @param string $key
+     * @param string $value
      *
      * @return string
      */
@@ -36,7 +39,7 @@ trait CleanHTMLTrait
      * Checks the given attribute can be cleaned.
      *
      * @param string $key
-     * @param        $value
+     * @param string $value
      *
      * @return bool
      */

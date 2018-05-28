@@ -59,6 +59,16 @@ public $dontNullEmptyAttributes = [
 ];
 ```
 
+### DateAttributeValueTrait
+
+Converts allowed attributes (by settings `$dateAttributes`) to carbon instance without any format limitation. Tries to parse any format.
+
+```php
+public $dateAttributes = ['custom_date'];
+```
+
+For manual usage use `DateAttributeTrait` with `tryToConvertAttributeValueToDate($key, $value)` method.
+
 ### Running multiple trait functions
 
 #### Using all attributes traits
