@@ -25,7 +25,7 @@ trait DateAttributeTrait
     public function tryToConvertAttributeValueToDate($key, $value)
     {
         if ($this->canConvertValueToDate($key) && is_string($value)) {
-            return Carbon::parse($value);
+            return $this->convertAttributeToDate($value);
         }
         return $value;
     }
@@ -63,6 +63,18 @@ trait DateAttributeTrait
         }
 
         // Return the carbon instance
-        return Carbon::parse($value);
+        return $this->convertAttributeToDate($value);
+    }
+
+    /**
+     * Converts the date to carbon instance. Parse any format
+     * @param string $value
+     *
+     * @return Carbon
+     */
+    protected function convertAttributeToDate($value)
+    {
+        // Remove space to support dates with spaces (28. 08. 2018)
+        return Carbon::parse(str_replace(' ', '', $value));
     }
 }
