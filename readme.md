@@ -69,6 +69,14 @@ public $dateAttributes = ['custom_date'];
 
 For manual usage use `DateAttributeTrait` with `tryToConvertAttributeValueToDate($key, $value)` method.
 
+All values are converted via `toArray` method to default format. You can customize date formats by attribute by setting `dateFormats`:
+
+```php
+public $dateFormats = [
+    'born' => 'Y-m-d'
+];
+```
+
 ### Running multiple trait functions
 
 #### Using all attributes traits

@@ -10,6 +10,7 @@ use Carbon\Carbon;
  * Converts any date string to carbon without fixed format. Extends the getAttributeValue function.
  *
  * @property array dateAttributes
+ * @property array dateFormats Date formats indexed by attribute name
  *
  * @package Pion\Support\Eloquent\Traits
  */
@@ -17,14 +18,15 @@ trait DateAttributeTrait
 {
     /**
      * Converts the value to Carbon if allowed
+     *
      * @param string $key
      * @param string $value
      *
-     * @return Carbon|string
+     * @return string
      */
     public function tryToConvertAttributeValueToDate($key, $value)
     {
-        if ($this->canConvertValueToDate($key) && is_string($value)) {
+        if ($this->canConvertValueToDate($key) && is_string($value) && $value !== '') {
             return $this->convertAttributeToDate($value);
         }
         return $value;
@@ -67,7 +69,57 @@ trait DateAttributeTrait
     }
 
     /**
+     * Convert the model's attributes to an array.
+     *
+     * @return array
+     */
+    public function attributesToArray()
+    {
+        // Handle json convert - we need to convert carbon objects to string
+        $attributes = parent::attributesToArray();
+
+        if (property_exists($this, 'dateAttributes') === false) {
+            return $attributes;
+        }
+
+        foreach ($this->dateAttributes as $attribute) {
+            if (isset($attributes[$attribute]) === false) {
+                continue;
+            }
+
+            // Check if the value is carbon instance
+            $value = $attributes[$attribute];
+            if (($value instanceof Carbon) === false) {
+                continue;
+            }
+
+            // Convert the carbon to date time and replace the value
+            $format = $this->getDateFormatFor($attribute);
+            $attributes[$attribute] = $value->format($format);
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Returns date format for given attribute.
+     *
+     * @param string $attribute
+     *
+     * @return string
+     */
+    protected function getDateFormatFor($attribute)
+    {
+        if (property_exists($this, 'dateFormats') === false ||
+            isset($this->dateFormats[$attribute]) === false) {
+            return $this->getDateFormat();
+        }
+        return $this->dateFormats[$attribute];
+    }
+
+    /**
      * Converts the date to carbon instance. Parse any format
+     *
      * @param string $value
      *
      * @return Carbon
