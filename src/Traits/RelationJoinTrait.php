@@ -1,4 +1,5 @@
 <?php
+
 namespace Pion\Support\Eloquent\Traits;
 
 use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
@@ -7,25 +8,22 @@ use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Str;
 
 /**
- * Class RelationJoinTrait
+ * Class RelationJoinTrait.
  *
  * Trait to create model join for scope with detection of model in the attributes.
  *
  * Prefils the relations array.
  *
  * @property array $relationAliases A list of relations that has different method name than the table. Can be defined
- * in model like this:
- * protected $relationAliases = [
- *   "activity_type" => "type"
- *   ];
+ *                                  in model like this:
+ *                                  protected $relationAliases = [
+ *                                  "activity_type" => "type"
+ *                                  ];
  *
  * @method setRelation($table, $instance)
- *
- * @package Pion\Support\Eloquent\Traits
  */
 trait RelationJoinTrait
 {
-    
     /**
      * This determines the foreign key relations automatically to prevent the need to figure out the columns.
      *
@@ -36,18 +34,17 @@ trait RelationJoinTrait
      * @param string                             $operatorOrColumns ON condition operator
      * @param string                             $type              join type (left, right, '', etc)
      * @param bool                               $where             custom where condition
-     * @param array                              $columns           if you will not pass columns, it will retreive the column listing.
-     * If you pass null
-     * it will not get any data from the model.
-     * all columns *
+     * @param array                              $columns           if you will not pass columns, it will retreive the
+     *                                                              column listing. If you pass null it will not get
+     *                                                              any data from the model. all columns *
      *
      * @return \Illuminate\Database\Query\Builder
      *
-     * @link http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
+     * @see http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      */
     public function scopeModelJoin($query, $relation_name, $operatorOrColumns = '=', $type = 'left',
-                                   $where = false, $columns = array()) {
-
+                                   $where = false, $columns = array())
+    {
         /** @var Relation $relation */
         $relation = $this->$relation_name();
         $table = $relation->getRelated()->getTable();
@@ -55,11 +52,11 @@ trait RelationJoinTrait
         // use different relation column for HasOneOrMany relation
         if ($relation instanceof HasOneOrMany) {
             $one = $relation->getQualifiedParentKeyName();
+            $two = $relation->getQualifiedForeignKeyName();
         } else {
             $one = $relation->getRelated()->getQualifiedKeyName();
+            $two = $relation->getForeignKey();
         }
-
-        $two = $relation->getForeignKey();
 
         return $this->scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type, $where, $columns);
     }
@@ -72,18 +69,19 @@ trait RelationJoinTrait
      * @param string                             $two               joins two parameter
      * @param string                             $type              join type (left, right, '', etc)
      * @param bool|false                         $where             custom where condition
-     * @param array                              $columns           if you will not pass columns, it will retreive the column listing. If you pass null
-     * it will not get any data from the model.
+     * @param array                              $columns           if you will not pass columns, it will retreive the
+     *                                                              column listing. If you pass null it will not get
+     *                                                              any data from the model.
      *
      * @return \Illuminate\Database\Query\Builder
      */
-    public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = "left", $where = false,
+    public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = 'left', $where = false,
                                         $columns = array())
     {
         // if the operator columns are in
         if (is_array($operatorOrColumns) || is_null($operatorOrColumns)) {
             $columns = $operatorOrColumns;
-            $operatorOrColumns = "=";
+            $operatorOrColumns = '=';
         }
 
         if (!is_null($columns)) {
@@ -104,10 +102,11 @@ trait RelationJoinTrait
     /**
      * Overides the basic attributes filling with check if the attributes has
      * columns with table format. Checks if we can make a model based on table prefix and
-     * relation definition. Tested on BelonstTo and left join
+     * relation definition. Tested on BelonstTo and left join.
      *
-     * @param array $attributes
+     * @param array      $attributes
      * @param bool|false $sync
+     *
      * @return mixed
      */
     public function setRawAttributes(array $attributes, $sync = false)
@@ -117,7 +116,6 @@ trait RelationJoinTrait
 
         if (!empty($tableAttributes)) {
             foreach ($tableAttributes as $tableFull => $newAttributes) {
-
                 // get the tabale name method
                 $table = $this->getBelongsToMethodName($tableFull);
 
@@ -128,14 +126,14 @@ trait RelationJoinTrait
 
                     // check if the relations support related method and we have
                     // relation object
-                    if (is_object($relation) && method_exists($relation, "getRelated")) {
+                    if (is_object($relation) && method_exists($relation, 'getRelated')) {
                         // when joining via left, all the values can be null
                         // if not found, lets support null relation
                         $isAllNull = true;
 
                         // remove the attributes from the original model
                         foreach ($newAttributes as $key => $attribute) {
-                            unset($attributes[$tableFull.".".$key]);
+                            unset($attributes[$tableFull.'.'.$key]);
                             if (!is_null($attribute)) {
                                 $isAllNull = false;
                             }
@@ -161,8 +159,10 @@ trait RelationJoinTrait
 
     /**
      * Loops all the attributes and finds only values that have prefix format
-     * TABLE.COLLUMN
+     * TABLE.COLLUMN.
+     *
      * @param array $attributes
+     *
      * @return array
      */
     public function getAttributesByTablePrefix(array $attributes)
@@ -172,7 +172,7 @@ trait RelationJoinTrait
         foreach ($attributes as $attribute => $value) {
             // check prefix format
             if (preg_match("/([^\.]+)\.(.*)/", $attribute, $matches)) {
-                 $tableAttributes[$matches[1]][$matches[2]] = $value;
+                $tableAttributes[$matches[1]][$matches[2]] = $value;
             }
         }
 
@@ -180,11 +180,11 @@ trait RelationJoinTrait
     }
 
     /**
-     * Returns the method name for given table
+     * Returns the method name for given table.
      *
-     * @param string $tableFull     like activity_types
+     * @param string $tableFull like activity_types
      *
-     * @return string   as activity_type
+     * @return string as activity_type
      */
     protected function getBelongsToMethodName($tableFull)
     {
