@@ -9,8 +9,8 @@ use Carbon\Carbon;
  *
  * Converts any date string to carbon without fixed format. Extends the getAttributeValue function.
  *
- * @property array dateAttributes
- * @property array dateFormats Date formats indexed by attribute name
+ * @property array        dateAttributes
+ * @property array|string dateFormats Date formats indexed by attribute name
  *
  * @package Pion\Support\Eloquent\Traits
  */
@@ -26,8 +26,30 @@ trait DateAttributeTrait
      */
     public function tryToConvertAttributeValueToDate($key, $value)
     {
-        if ($this->canConvertValueToDate($key) && is_string($value) && $value !== '') {
-            return $this->convertAttributeToDate($value);
+        if ($this->canConvertValueToDate($key)) {
+            return $this->tryToConvertToDateString($key, $value);
+        }
+        return $value;
+    }
+
+    /**
+     * Tries to convert the value to valid date string in correct date format based on attribute
+     *
+     * @param string $key
+     * @param mixed  $value
+     *
+     * @return string|mixed
+     */
+    public function tryToConvertToDateString($key, $value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        if (is_string($value) && $value !== '') {
+            return $this->asValidDateString($key, $value);
+        }
+        if ($value instanceOf Carbon) {
+            return $value->format($this->getDateFormatFor($key));
         }
         return $value;
     }
@@ -54,7 +76,7 @@ trait DateAttributeTrait
     public function getAttributeValue($key)
     {
         // Call parent if the attribute is not allowed
-        if ($this->canConvertValueToDate($key) === false) {
+        if (false === $this->canConvertValueToDate($key)) {
             return parent::getAttributeValue($key);
         }
 
@@ -65,40 +87,7 @@ trait DateAttributeTrait
         }
 
         // Return the carbon instance
-        return $this->convertAttributeToDate($value);
-    }
-
-    /**
-     * Convert the model's attributes to an array.
-     *
-     * @return array
-     */
-    public function attributesToArray()
-    {
-        // Handle json convert - we need to convert carbon objects to string
-        $attributes = parent::attributesToArray();
-
-        if (property_exists($this, 'dateAttributes') === false) {
-            return $attributes;
-        }
-
-        foreach ($this->dateAttributes as $attribute) {
-            if (isset($attributes[$attribute]) === false) {
-                continue;
-            }
-
-            // Check if the value is carbon instance
-            $value = $attributes[$attribute];
-            if (($value instanceof Carbon) === false) {
-                continue;
-            }
-
-            // Convert the carbon to date time and replace the value
-            $format = $this->getDateFormatFor($attribute);
-            $attributes[$attribute] = $value->format($format);
-        }
-
-        return $attributes;
+        return Carbon::parse($value);
     }
 
     /**
@@ -110,23 +99,32 @@ trait DateAttributeTrait
      */
     protected function getDateFormatFor($attribute)
     {
-        if (property_exists($this, 'dateFormats') === false ||
-            isset($this->dateFormats[$attribute]) === false) {
+        if (false === property_exists($this, 'dateFormats')) {
+            return $this->getDateFormat();
+        }
+        // Support global date format
+        if (is_string($this->dateFormats)) {
+            return $this->dateFormats;
+        }
+        // Support individual date format
+        if (false === isset($this->dateFormats[$attribute])) {
             return $this->getDateFormat();
         }
         return $this->dateFormats[$attribute];
     }
 
     /**
-     * Converts the date to carbon instance. Parse any format
+     * Parsers date string the date to carbon instance and back to desired date attribute format.
      *
+     * @param string $key Attribute key
      * @param string $value
      *
-     * @return Carbon
+     * @return string
      */
-    protected function convertAttributeToDate($value)
+    protected function asValidDateString($key, $value)
     {
+        $dateFormat = $this->getDateFormatFor($key);
         // Remove space to support dates with spaces (28. 08. 2018)
-        return Carbon::parse(str_replace(' ', '', $value));
+        return Carbon::parse(str_replace(' ', '', $value))->format($dateFormat);
     }
 }
