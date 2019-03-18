@@ -30,11 +30,11 @@ trait RelationJoinTrait
      * Based on http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      *
      * @param \Illuminate\Database\Query\Builder $query
-     * @param string                             $relation_name     the function that return the relation
+     * @param                                    $relationName
      * @param string                             $operatorOrColumns ON condition operator
      * @param string                             $type              join type (left, right, '', etc)
      * @param bool                               $where             custom where condition
-     * @param array                              $columns           if you will not pass columns, it will retreive the
+     * @param array                              $columns           if you will not pass columns, it will retrieve the
      *                                                              column listing. If you pass null it will not get
      *                                                              any data from the model. all columns *
      *
@@ -42,11 +42,11 @@ trait RelationJoinTrait
      *
      * @see http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      */
-    public function scopeModelJoin($query, $relation_name, $operatorOrColumns = '=', $type = 'left',
+    public function scopeModelJoin($query, $relationName, $operatorOrColumns = '=', $type = 'left',
                                    $where = false, $columns = array())
     {
         /** @var Relation $relation */
-        $relation = $this->$relation_name();
+        $relation = $this->$relationName();
         $table = $relation->getRelated()->getTable();
 
         // use different relation column for HasOneOrMany relation
@@ -55,10 +55,34 @@ trait RelationJoinTrait
             $two = $relation->getQualifiedForeignKeyName();
         } else {
             $one = $relation->getRelated()->getQualifiedKeyName();
-            $two = $relation->getForeignKey();
+            $two = "{$relation->getParent()->getTable()}.{$relation->getForeignKey()}";
         }
 
-        return $this->scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type, $where, $columns);
+        return $this->scopeJoinWithSelect(
+            $query,
+            $table,
+            $one,
+            $operatorOrColumns,
+            $two,
+            $type,
+            $where,
+            $columns,
+            $relationName
+        );
+    }
+
+    /**
+     * Replaces the table in name in column with alias.
+     *
+     * @param string $column
+     * @param string $table
+     * @param string $alias
+     *
+     * @return string
+     */
+    protected function replaceTableWithAlias($column, $table, $alias)
+    {
+        return str_replace("{$table}.", "{$alias}.", $column);
     }
 
     /**
@@ -72,12 +96,20 @@ trait RelationJoinTrait
      * @param array                              $columns           if you will not pass columns, it will retreive the
      *                                                              column listing. If you pass null it will not get
      *                                                              any data from the model.
+     * @param string|null                        $tableAlias
      *
      * @return \Illuminate\Database\Query\Builder
      */
     public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = 'left', $where = false,
-                                        $columns = array())
+                                        $columns = array(), $tableAlias = null)
     {
+        $joinTableExpression = $table;
+        if ($tableAlias === null) {
+            $tableAlias = $table;
+        } else {
+            $joinTableExpression = \DB::raw("`{$table}` as `{$tableAlias}`");
+        }
+
         // if the operator columns are in
         if (is_array($operatorOrColumns) || is_null($operatorOrColumns)) {
             $columns = $operatorOrColumns;
@@ -92,17 +124,24 @@ trait RelationJoinTrait
 
             // build the table values prefixed by the table to ensure unique values
             foreach ($columns as $related_column) {
-                $query->addSelect(new Expression("`$table`.`$related_column` AS `$table.$related_column`"));
+                $query->addSelect(new Expression("`$tableAlias`.`$related_column` AS `$tableAlias.$related_column`"));
             }
         }
 
-        return $query->join($table, $one, $operatorOrColumns, $two, $type, $where);
+        return $query->join(
+            $joinTableExpression,
+            $this->replaceTableWithAlias($one, $table, $tableAlias),
+            $operatorOrColumns,
+            $this->replaceTableWithAlias($two, $table, $tableAlias),
+            $type,
+            $where
+        );
     }
 
     /**
-     * Overides the basic attributes filling with check if the attributes has
+     * Overrides the basic attributes filling with check if the attributes has
      * columns with table format. Checks if we can make a model based on table prefix and
-     * relation definition. Tested on BelonstTo and left join.
+     * relation definition. Tested on BelongsTo and left join.
      *
      * @param array      $attributes
      * @param bool|false $sync
@@ -189,7 +228,7 @@ trait RelationJoinTrait
     protected function getBelongsToMethodName($tableFull)
     {
         // check if its relation function. The table names can
-        // be in plurar
+        // be in plural
         $table = Str::singular($tableFull);
 
         // support the aliases for changing the table name
