@@ -5,6 +5,7 @@ namespace Pion\Support\Eloquent\Traits;
 use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Str;
 
 /**
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
  *
  * Trait to create model join for scope with detection of model in the attributes.
  *
- * Prefils the relations array.
+ * Pre-fills the relations array.
  *
  * @property array $relationAliases A list of relations that has different method name than the table. Can be defined
  *                                  in model like this:
@@ -33,17 +34,17 @@ trait RelationJoinTrait
      * @param                                    $relationName
      * @param string                             $operatorOrColumns ON condition operator
      * @param string                             $type              join type (left, right, '', etc)
-     * @param bool                               $where             custom where condition
      * @param array                              $columns           if you will not pass columns, it will retrieve the
      *                                                              column listing. If you pass null it will not get
      *                                                              any data from the model. all columns *
+     * @param callable|null                      $extendJoin        Closure that receives JoinClause as first parameter.
      *
      * @return \Illuminate\Database\Query\Builder
      *
      * @see http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      */
-    public function scopeModelJoin($query, $relationName, $operatorOrColumns = '=', $type = 'left',
-                                   $where = false, $columns = array())
+    public function scopeModelJoin($query, $relationName, $operatorOrColumns = '=', $type = 'left', $columns = [],
+                                   callable $extendJoin = null)
     {
         /** @var Relation $relation */
         $relation = $this->$relationName();
@@ -65,8 +66,38 @@ trait RelationJoinTrait
             $operatorOrColumns,
             $two,
             $type,
-            $where,
             $columns,
+            // Relations can contain custom where conditions - migrate the conditions to join clause
+            function (JoinClause $joinClause) use ($extendJoin, $relation, $relationName) {
+                if (is_callable($extendJoin)) {
+                    $extendJoin($joinClause);
+                }
+
+                // Try to handle custom where conditions used on relation
+                $query = $relation->getQuery()->getQuery();
+
+                // Relations builds where condition for NotNull
+                if ($relation instanceof HasOneOrMany) {
+                    // Has relations builds Null/NotNull where conditions, we need to remove them
+                    $whereConditionsWithoutRelationConditions = array_slice($query->wheres, 2);
+                } else {
+                    $whereConditionsWithoutRelationConditions = array_slice($query->wheres, 1);
+                }
+
+                // Merge where conditions with bindings
+                if (false === empty($whereConditionsWithoutRelationConditions)) {
+                    $wheres = [];
+                    // Append table alias to column
+                    foreach ($whereConditionsWithoutRelationConditions as $condition) {
+                        $condition['column'] = \DB::raw("`{$relationName}`.`{$condition['column']}`");
+                        $wheres[] = $condition;
+                    }
+
+                    // Merge the where condition
+                    $joinClause->mergeWheres($wheres, $query->getRawBindings());
+                }
+            },
+            // Relation name is used as table alias
             $relationName
         );
     }
@@ -89,19 +120,19 @@ trait RelationJoinTrait
      * @param \Illuminate\Database\Query\Builder $query
      * @param string                             $table             join the table
      * @param string                             $one               joins first parameter
-     * @param string|array|null                  $operatorOrColumns operator condition or colums list
+     * @param string|array|null                  $operatorOrColumns operator condition or columns list
      * @param string                             $two               joins two parameter
      * @param string                             $type              join type (left, right, '', etc)
-     * @param bool|false                         $where             custom where condition
-     * @param array                              $columns           if you will not pass columns, it will retreive the
+     * @param array                              $columns           if you will not pass columns, it will retrieve the
      *                                                              column listing. If you pass null it will not get
      *                                                              any data from the model.
+     * @param callable|null                      $extendJoin        Closure that receives JoinClause as first parameter.
      * @param string|null                        $tableAlias
      *
      * @return \Illuminate\Database\Query\Builder
      */
-    public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = 'left', $where = false,
-                                        $columns = array(), $tableAlias = null)
+    public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = 'left',
+                                        $columns = array(), callable $extendJoin = null, $tableAlias = null)
     {
         $joinTableExpression = $table;
         if ($tableAlias === null) {
@@ -130,12 +161,19 @@ trait RelationJoinTrait
 
         return $query->join(
             $joinTableExpression,
-            $this->replaceTableWithAlias($one, $table, $tableAlias),
-            $operatorOrColumns,
-            $this->replaceTableWithAlias($two, $table, $tableAlias),
-            $type,
-            $where
-        );
+            function (JoinClause $join) use ($one, $two, $table, $tableAlias, $operatorOrColumns, $extendJoin) {
+                // Add on condition
+                $join->on(
+                    $this->replaceTableWithAlias($one, $table, $tableAlias),
+                    $operatorOrColumns,
+                    $this->replaceTableWithAlias($two, $table, $tableAlias)
+                );
+
+                // Support custom JoinClause conditions
+                if (is_callable($extendJoin)) {
+                    $extendJoin($join);
+                }
+            }, null, null, $type);
     }
 
     /**
@@ -150,12 +188,12 @@ trait RelationJoinTrait
      */
     public function setRawAttributes(array $attributes, $sync = false)
     {
-        // find
+        // Find all attributes
         $tableAttributes = $this->getAttributesByTablePrefix($attributes);
 
         if (!empty($tableAttributes)) {
             foreach ($tableAttributes as $tableFull => $newAttributes) {
-                // get the tabale name method
+                // Get the table name method
                 $table = $this->getBelongsToMethodName($tableFull);
 
                 // check if exists
