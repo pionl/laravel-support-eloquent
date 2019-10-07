@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Str;
+use DB;
+use Schema;
+use Illuminate\Database\Query\Builder;
 
 /**
  * Class RelationJoinTrait.
@@ -30,7 +33,7 @@ trait RelationJoinTrait
      *
      * Based on http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      *
-     * @param \Illuminate\Database\Query\Builder $query
+     * @param Builder $query
      * @param                                    $relationName
      * @param string                             $operatorOrColumns ON condition operator
      * @param string                             $type              join type (left, right, '', etc)
@@ -39,7 +42,7 @@ trait RelationJoinTrait
      *                                                              any data from the model. all columns *
      * @param callable|null                      $extendJoin        Closure that receives JoinClause as first parameter.
      *
-     * @return \Illuminate\Database\Query\Builder
+     * @return Builder
      *
      * @see http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      */
@@ -68,7 +71,7 @@ trait RelationJoinTrait
             $type,
             $columns,
             // Relations can contain custom where conditions - migrate the conditions to join clause
-            function (JoinClause $joinClause) use ($extendJoin, $relation, $relationName) {
+            function (JoinClause $joinClause) use ($extendJoin, $relation, $relationName, $table) {
                 if (is_callable($extendJoin)) {
                     $extendJoin($joinClause);
                 }
@@ -89,7 +92,11 @@ trait RelationJoinTrait
                     $wheres = [];
                     // Append table alias to column
                     foreach ($whereConditionsWithoutRelationConditions as $condition) {
-                        $condition['column'] = \DB::raw("`{$relationName}`.`{$condition['column']}`");
+                        // Remove the table - we are using alias
+                        $columnWithoutTableName = str_replace($table.'.', '', $condition['column']);
+
+                        // Replace the where condition with alias
+                        $condition['column'] = DB::raw("`{$relationName}`.`{$columnWithoutTableName}`");
                         $wheres[] = $condition;
                     }
 
@@ -117,7 +124,7 @@ trait RelationJoinTrait
     }
 
     /**
-     * @param \Illuminate\Database\Query\Builder $query
+     * @param Builder $query
      * @param string                             $table             join the table
      * @param string                             $one               joins first parameter
      * @param string|array|null                  $operatorOrColumns operator condition or columns list
@@ -129,7 +136,7 @@ trait RelationJoinTrait
      * @param callable|null                      $extendJoin        Closure that receives JoinClause as first parameter.
      * @param string|null                        $tableAlias
      *
-     * @return \Illuminate\Database\Query\Builder
+     * @return Builder
      */
     public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = 'left',
                                         $columns = array(), callable $extendJoin = null, $tableAlias = null)
@@ -138,7 +145,7 @@ trait RelationJoinTrait
         if ($tableAlias === null) {
             $tableAlias = $table;
         } else {
-            $joinTableExpression = \DB::raw("`{$table}` as `{$tableAlias}`");
+            $joinTableExpression = DB::raw("`{$table}` as `{$tableAlias}`");
         }
 
         // if the operator columns are in
@@ -150,7 +157,7 @@ trait RelationJoinTrait
         if (!is_null($columns)) {
             // if there is no specific columns, lets get all
             if (empty($columns)) {
-                $columns = \Schema::getColumnListing($table);
+                $columns = Schema::getColumnListing($table);
             }
 
             // build the table values prefixed by the table to ensure unique values
