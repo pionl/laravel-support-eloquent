@@ -59,6 +59,19 @@ public $dontNullEmptyAttributes = [
 ];
 ```
 
+### NormalizeFloatAttributeTrait
+
+Converts float string to float value with comma support (floatval fails to convert 13,3 to 13.3) by setting list of attributes via `$normalizeFloatAttributes`.
+
+```
+public $normalizeFloatAttributes = [
+    'price',
+    'discount',
+];
+```
+
+For manual usage use `NormalizeFloatTrait ` with `tryToNormalizeFloatAttributeValue($key, $value)` method.
+
 ### DateAttributeValueTrait
 
 Converts allowed attributes (by settings `$dateAttributes`) to carbon instance without any format limitation. Tries to parse any format.
