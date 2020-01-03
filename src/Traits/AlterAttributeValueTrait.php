@@ -4,7 +4,7 @@ namespace Pion\Support\Eloquent\Traits;
 
 trait AlterAttributeValueTrait
 {
-    use CleanHTMLTrait, NullEmptyStringTrait, DateAttributeTrait;
+    use CleanHTMLTrait, NullEmptyStringTrait, DateAttributeTrait, NormalizeFloatTrait;
 
     /**
      * Set a given attribute on the model.
@@ -17,7 +17,8 @@ trait AlterAttributeValueTrait
         parent::setAttribute($key, alter_attribute_value($key, $value, $this, [
             'tryToCleanAttributeValue',
             'tryToNullAttributeValue',
-            'tryToConvertAttributeValueToDate'
+            'tryToConvertAttributeValueToDate',
+            'tryToNormalizeFloatAttributeValue',
         ]));
     }
 }
