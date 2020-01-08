@@ -82,7 +82,7 @@ trait DateAttributeTrait
 
         // Get the value and parse only non-null values
         $value = $this->getAttributeFromArray($key);
-        if (is_null($value)) {
+        if (is_null($value) || $value === '') {
             return $value;
         }
 
