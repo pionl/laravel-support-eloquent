@@ -59,7 +59,7 @@ trait RelationJoinTrait
             $two = $relation->getQualifiedForeignKeyName();
         } else {
             $one = $relation->getRelated()->getQualifiedKeyName();
-            $two = "{$relation->getParent()->getTable()}.{$relation->getForeignKey()}";
+            $two = "{$relation->getParent()->getTable()}.{$relation->getForeignKeyName()}";
         }
 
         return $this->scopeJoinWithSelect(
