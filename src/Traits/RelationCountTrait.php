@@ -52,7 +52,7 @@ trait RelationCountTrait {
      */
     protected function relationCountQuery($related, $foreignKey = null, $localKey = null) {
         $relation = $this->hasOne($related, $foreignKey, $localKey);
-        $currentForeignKey = $relation->getForeignKey();
+        $currentForeignKey = $relation->getForeignKeyName();
 
         // we must add a count, and also the the foreign key to enable returning the relation
         // which is paired by the key
