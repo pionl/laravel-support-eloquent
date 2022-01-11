@@ -18,6 +18,6 @@
         ]
     },
     "require": {
-        "illuminate/database": "5.4 - 5.8"
+        "illuminate/database": "^6 || ^7 || ^8"
     }
 }
