@@ -28,9 +28,13 @@ trait CleanHTMLTrait
      */
     public function tryToCleanAttributeValue($key, $value)
     {
+        $stripHtmlTags = $this->stripHtmlTags !== null && property_exists($this, $this->stripHtmlTags)
+            ? $this->stripHtmlTags
+            : null;
+
         // should we null the attribute
         if ($this->canRemoveHTMLFromAttribute($key, $value)) {
-            return strip_tags($value, property_exists($this, $this->stripHtmlTags) ? $this->stripHtmlTags : null);
+            return strip_tags($value, $stripHtmlTags);
         }
         return $value;
     }
