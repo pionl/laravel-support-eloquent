@@ -90,6 +90,7 @@ trait RelationJoinTrait
                 // Merge where conditions with bindings
                 if (false === empty($whereConditionsWithoutRelationConditions)) {
                     $wheres = [];
+                    $bindings = [];
                     // Append table alias to column
                     foreach ($whereConditionsWithoutRelationConditions as $condition) {
                         // Remove the table - we are using alias
@@ -98,10 +99,13 @@ trait RelationJoinTrait
                         // Replace the where condition with alias
                         $condition['column'] = DB::raw("`{$relationName}`.`{$columnWithoutTableName}`");
                         $wheres[] = $condition;
+                        if (array_key_exists('value', $condition) === true) {
+                            $bindings[] = $condition['value'];   
+                        }
                     }
 
                     // Merge the where condition
-                    $joinClause->mergeWheres($wheres, $query->getRawBindings());
+                    $joinClause->mergeWheres($wheres, $bindings);
                 }
             },
             // Relation name is used as table alias
