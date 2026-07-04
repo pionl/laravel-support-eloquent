@@ -25,6 +25,6 @@ trait NullEmptyStringAttributeTrait
     public function setAttribute($key, $value)
     {
         // call the parent attribute setting
-        parent::setAttribute($key, $this->tryToNullAttributeValue($key, $value));
+        return parent::setAttribute($key, $this->tryToNullAttributeValue($key, $value));
     }
 }

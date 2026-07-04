@@ -47,7 +47,7 @@ trait RelationJoinTrait
      * @see http://laravel-tricks.com/tricks/automatic-join-on-eloquent-models-with-relations-setup
      */
     public function scopeModelJoin($query, $relationName, $operatorOrColumns = '=', $type = 'left', $columns = [],
-                                   callable $extendJoin = null)
+                                   ?callable $extendJoin = null)
     {
         /** @var Relation $relation */
         $relation = $this->$relationName();
@@ -80,11 +80,13 @@ trait RelationJoinTrait
                 $query = $relation->getQuery()->getQuery();
 
                 // Relations builds where condition for NotNull
+                $wheres = is_array($query->wheres ?? null) ? $query->wheres : [];
+
                 if ($relation instanceof HasOneOrMany) {
                     // Has relations builds Null/NotNull where conditions, we need to remove them
-                    $whereConditionsWithoutRelationConditions = array_slice($query->wheres, 2);
+                    $whereConditionsWithoutRelationConditions = array_slice($wheres, 2);
                 } else {
-                    $whereConditionsWithoutRelationConditions = array_slice($query->wheres, 1);
+                    $whereConditionsWithoutRelationConditions = array_slice($wheres, 1);
                 }
 
                 // Merge where conditions with bindings
@@ -93,6 +95,10 @@ trait RelationJoinTrait
                     $bindings = [];
                     // Append table alias to column
                     foreach ($whereConditionsWithoutRelationConditions as $condition) {
+                        if (!isset($condition['column'])) {
+                            continue;
+                        }
+
                         // Remove the table - we are using alias
                         $columnWithoutTableName = str_replace($table.'.', '', $condition['column']);
 
@@ -143,7 +149,7 @@ trait RelationJoinTrait
      * @return Builder
      */
     public function scopeJoinWithSelect($query, $table, $one, $operatorOrColumns, $two, $type = 'left',
-                                        $columns = array(), callable $extendJoin = null, $tableAlias = null)
+                                        $columns = array(), ?callable $extendJoin = null, $tableAlias = null)
     {
         $joinTableExpression = $table;
         if ($tableAlias === null) {

@@ -14,7 +14,7 @@ trait AlterAttributeValueTrait
      */
     public function setAttribute($key, $value)
     {
-        parent::setAttribute($key, alter_attribute_value($key, $value, $this, [
+        return parent::setAttribute($key, alter_attribute_value($key, $value, $this, [
             'tryToCleanAttributeValue',
             'tryToNullAttributeValue',
             'tryToConvertAttributeValueToDate',
