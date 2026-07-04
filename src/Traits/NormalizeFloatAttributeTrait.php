@@ -22,6 +22,6 @@ trait NormalizeFloatAttributeTrait
     public function setAttribute($key, $value)
     {
         // call the parent attribute setting
-        parent::setAttribute($key, $this->tryToNormalizeFloatAttributeValue($key, $value));
+        return parent::setAttribute($key, $this->tryToNormalizeFloatAttributeValue($key, $value));
     }
 }

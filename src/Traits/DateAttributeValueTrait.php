@@ -15,6 +15,6 @@ trait DateAttributeValueTrait
     public function setAttribute($key, $value)
     {
         // call the parent attribute setting
-        parent::setAttribute($key, $this->tryToConvertAttributeValueToDate($key, $value));
+        return parent::setAttribute($key, $this->tryToConvertAttributeValueToDate($key, $value));
     }
 }

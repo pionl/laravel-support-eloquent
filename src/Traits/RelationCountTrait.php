@@ -33,9 +33,8 @@ trait RelationCountTrait {
      */
     protected function relationCountQueryObjectWithIndex($index, $function)
     {
-
         // if relation is not loaded already, let's do it first
-        if ( ! property_exists($this, $index)) {
+        if (!$this->relationLoaded($index)) {
             $this->relations[$index] = $function()->first();
         }
 

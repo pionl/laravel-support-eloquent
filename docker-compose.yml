@@ -1,0 +1,56 @@
+services:
+  php82:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        PHP_VERSION: "8.2"
+    image: pion-laravel-support-eloquent:php82
+    working_dir: /app
+    volumes:
+      - .:/app
+      - composer-cache-82:/tmp/composer-cache
+      - package-tmp-82:/worktmp
+    environment:
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+      PACKAGE_TMP_DIR: /worktmp
+
+  php83:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        PHP_VERSION: "8.3"
+    image: pion-laravel-support-eloquent:php83
+    working_dir: /app
+    volumes:
+      - .:/app
+      - composer-cache-83:/tmp/composer-cache
+      - package-tmp-83:/worktmp
+    environment:
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+      PACKAGE_TMP_DIR: /worktmp
+
+  php85:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        PHP_VERSION: "8.5"
+    image: pion-laravel-support-eloquent:php85
+    working_dir: /app
+    volumes:
+      - .:/app
+      - composer-cache-85:/tmp/composer-cache
+      - package-tmp-85:/worktmp
+    environment:
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+      PACKAGE_TMP_DIR: /worktmp
+
+volumes:
+  composer-cache-82:
+  composer-cache-83:
+  composer-cache-85:
+  package-tmp-82:
+  package-tmp-83:
+  package-tmp-85:
